@@ -5,7 +5,7 @@
 
 void query_device()
 {
-	int deviceCount = 0;   
+	int deviceCount = 0;
 	cudaGetDeviceCount(&deviceCount);
 
 	if (deviceCount == 0)
@@ -14,7 +14,7 @@ void query_device()
 	}
 
 	int devNo = 0;
-	cudaDeviceProp iProp; 
+	cudaDeviceProp iProp;
 	cudaGetDeviceProperties(&iProp, devNo);
 
 	printf("Device %d: %s\n", devNo, iProp.name);
@@ -46,9 +46,15 @@ void query_device()
 		iProp.maxGridSize[0], iProp.maxGridSize[1], iProp.maxGridSize[2]);
 	printf("  Maximum block dimension                   :    (%d,%d,%d)\n",
 		iProp.maxThreadsDim[0], iProp.maxThreadsDim[1], iProp.maxThreadsDim[2]);
+
+
+        int processorCount = iProp.multiProcessorCount;
+        int maxThreadsPerProcessor = iProp.maxThreadsPerMultiProcessor;
+
+        printf("  Maximum number of threads:                %llu\n", processorCount * maxThreadsPerProcessor);
 }
 
-//int main()
-//{
-//	query_device();
-//}
+int main()
+{
+	query_device();
+}

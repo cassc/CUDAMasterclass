@@ -20,19 +20,21 @@ __global__ void reduction_kernel_complete_unrolling(int * int_array,
 	//local data pointer
 	int * i_data = int_array + blockDim.x * blockIdx.x;
 
-	if (blockDim.x == 1024 && tid < 512)
+        // printf("blockDim.x %d tid: %d\n", blockDim.x, tid);
+
+	if (blockDim.x >= 1024 && tid < 512)
 		i_data[tid] += i_data[tid + 512];
 	__syncthreads();
 
-	if (blockDim.x == 512 && tid < 256)
+	if (blockDim.x >= 512 && tid < 256)
 		i_data[tid] += i_data[tid + 256];
 	__syncthreads();
 
-	if (blockDim.x == 256 && tid < 128)
+	if (blockDim.x >= 256 && tid < 128)
 		i_data[tid] += i_data[tid + 128];
 	__syncthreads();
 
-	if (blockDim.x == 128 && tid < 64)
+	if (blockDim.x >= 128 && tid < 64)
 		i_data[tid] += i_data[tid + 64];
 	__syncthreads();
 
@@ -53,56 +55,57 @@ __global__ void reduction_kernel_complete_unrolling(int * int_array,
 	}
 }
 
-//int main(int argc, char ** argv)
-//{
-//	printf("Running parallel reduction with complete unrolling kernel \n");
-//
-//	int size = 1 << 22;
-//	int byte_size = size * sizeof(int);
-//	int block_size = 128;
-//
-//	int * h_input, *h_ref;
-//	h_input = (int*)malloc(byte_size);
-//
-//	initialize(h_input, size, INIT_RANDOM);
-//
-//	int cpu_result = reduction_cpu(h_input, size);
-//
-//	dim3 block(block_size);
-//	dim3 grid(size / block_size);
-//
-//	printf("Kernel launch parameters || grid : %d, block : %d \n", grid.x, block.x);
-//
-//	int temp_array_byte_size = sizeof(int)* grid.x;
-//
-//	h_ref = (int*)malloc(temp_array_byte_size);
-//
-//	int * d_input, *d_temp;
-//	gpuErrchk(cudaMalloc((void**)&d_input, byte_size));
-//	gpuErrchk(cudaMalloc((void**)&d_temp, temp_array_byte_size));
-//
-//	gpuErrchk(cudaMemset(d_temp, 0, temp_array_byte_size));
-//	gpuErrchk(cudaMemcpy(d_input, h_input, byte_size,
-//		cudaMemcpyHostToDevice));
-//
-//	reduction_kernel_complete_unrolling <<< grid, block >> > (d_input, d_temp, size);
-//
-//	gpuErrchk(cudaDeviceSynchronize());
-//	gpuErrchk(cudaMemcpy(h_ref, d_temp, temp_array_byte_size, cudaMemcpyDeviceToHost));
-//
-//	int gpu_result = 0;
-//	for (int i = 0; i < grid.x; i++)
-//	{
-//		gpu_result += h_ref[i];
-//	}
-//
-//	compare_results(gpu_result, cpu_result);
-//
-//	gpuErrchk(cudaFree(d_input));
-//	gpuErrchk(cudaFree(d_temp));
-//	free(h_input);
-//	free(h_ref);
-//
-//	gpuErrchk(cudaDeviceReset());
-//	return 0;
-//}
+int main(int argc, char ** argv)
+{
+	printf("Running parallel reduction with complete unrolling kernel \n");
+
+	int size = 1 << 22;
+	int byte_size = size * sizeof(int);
+	int block_size = 1024;
+
+	int * h_input, *h_ref;
+	h_input = (int*)malloc(byte_size);
+
+	initialize(h_input, size, INIT_RANDOM);
+
+	int cpu_result = reduction_cpu(h_input, size);
+
+	dim3 block(block_size);
+	dim3 grid(size / block_size);
+
+
+	printf("Kernel launch parameters || grid : %d, block : %d \n", grid.x, block.x);
+
+	int temp_array_byte_size = sizeof(int)* grid.x;
+
+	h_ref = (int*)malloc(temp_array_byte_size);
+
+	int * d_input, *d_temp;
+	gpuErrchk(cudaMalloc((void**)&d_input, byte_size));
+	gpuErrchk(cudaMalloc((void**)&d_temp, temp_array_byte_size));
+
+	gpuErrchk(cudaMemset(d_temp, 0, temp_array_byte_size));
+	gpuErrchk(cudaMemcpy(d_input, h_input, byte_size,
+		cudaMemcpyHostToDevice));
+
+	reduction_kernel_complete_unrolling <<< grid, block >> > (d_input, d_temp, size);
+
+	gpuErrchk(cudaDeviceSynchronize());
+	gpuErrchk(cudaMemcpy(h_ref, d_temp, temp_array_byte_size, cudaMemcpyDeviceToHost));
+
+	int gpu_result = 0;
+	for (int i = 0; i < grid.x; i++)
+	{
+		gpu_result += h_ref[i];
+	}
+
+	compare_results(gpu_result, cpu_result);
+
+	gpuErrchk(cudaFree(d_input));
+	gpuErrchk(cudaFree(d_temp));
+	free(h_input);
+	free(h_ref);
+
+	gpuErrchk(cudaDeviceReset());
+	return 0;
+}

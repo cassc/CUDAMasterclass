@@ -5,8 +5,8 @@
 #include <cstring>
 #include <time.h>
 #include <stdlib.h>
-#include <sys/utime.h>
-#include <fstream> 
+#include <sys/time.h>
+#include <fstream>
 
 #define HANDLE_NULL( a ){if (a == NULL) { \
                             printf( "Host memory failed in %s at line %d\n", \
