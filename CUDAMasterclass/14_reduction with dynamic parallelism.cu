@@ -8,6 +8,9 @@
 #include "cuda_common.cuh"
 #include "common.h"
 
+// Compile with
+// nvcc -rdc true -D CUDA_FORCE_CDP1_IF_SUPPORTED  common.cpp 14_reduction\ with\ dynamic\ parallelism.cu && ./a.out
+// But it's slower than CPU version, why?
 __global__ void gpuRecursiveReduce(int *g_idata, int *g_odata,
 	unsigned int isize)
 {
